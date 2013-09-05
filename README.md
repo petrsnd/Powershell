@@ -5,20 +5,16 @@ Useful Powershell functions and snippets that I don't want to have to rewrite
 anymore. If you come across this and want to use it, go ahead. There is a BSD-
 style license below to satisfy any lawyers that might bug you.
 
+I make no claim that all of this code is original with me. I'm sure much of it
+came about by borrowing and customizing whatever I've found lying about on the
+Internet. I suppose any original code is copyrighted to me.
+
 License
 -------
-
-Copyright (c) 2013, Daniel F. Peterson
-All rights reserved.
+Copyright (c) 2013, Daniel F. Peterson. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution. 
+modification, are permitted.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
