@@ -1,7 +1,12 @@
 Powershell
 ==========
 
-Useful Powershell functions and snippets that I don't want to have to rewrite anymore.
+Useful Powershell functions and snippets that I don't want to have to rewrite
+anymore. If you come across this and want to use it, go ahead. There is a BSD-
+style license below to satisfy any lawyers that might bug you.
+
+License
+-------
 
 Copyright (c) 2013, Daniel F. Peterson
 All rights reserved.
