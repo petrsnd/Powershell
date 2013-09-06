@@ -9,6 +9,15 @@ I make no claim that all of this code is original with me. I'm sure much of it
 came about by borrowing and customizing whatever I've found lying about on the
 Internet. I suppose any original code is copyrighted to me.
 
+The code is written as modules that are meant to be imported.
+
+Import-Module mod.psm1 -Force
+
+It is usually a good idea to remove it at the end of your script.
+
+Remove-Module mod
+
+
 License
 -------
 Copyright (c) 2013, Daniel F. Peterson. All rights reserved.
