@@ -11,7 +11,7 @@ Internet. I suppose any original code is copyrighted to me.
 
 The code is written as modules that are meant to be imported.
 
-Import-Module mod.psm1 -Force
+Import-Module .\mod.psm1 -Force
 
 It is usually a good idea to remove it at the end of your script.
 

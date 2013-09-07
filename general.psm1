@@ -1,4 +1,4 @@
-## General purpose Powershell functions and snippets
+## General purpose Powershell functions
 
 ## Elevation
 function RequireAdministrativePrivilege()
@@ -38,32 +38,55 @@ Export-ModuleMember -Function ChangeDirectory
 function GetNic()
 {
     ## Results may vary on multi-homed machines
-    $private:nic = Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where { $_.IPEnabled -eq "True" }
-    if ($private:nic -is [system.array])
+    $private:nics = @(Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where { $_.IPEnabled -eq "True" })
+    if ($private:nics.Count -gt 0)
     {
-        $private:nic = $private:nic[0]
+        $private:nics[0]
     }
-    $private:nic
+    else
+    {
+        $Null
+    }
 }
 function GetIPv4Address()
 {
     $private:nic = (GetNic)
-    $private:addr = $private:nic.IPAddress | where { $_.Contains(".") }
-    if ($private:addr -is [system.array])
+    if ($private:nic)
     {
-        $private:addr = $private:addr[0]
+        $private:addrs = @($private:nic.IPAddress | where { $_.Contains(".") })
+        if ($private:addrs.Count -gt 0)
+        {
+            $private:addrs[0]
+        }
+        else
+        {
+            $Null
+        }
     }
-    $private:addr
+    else
+    {
+        $Null
+    }
 }
 function GetIPv6Address()
 {
     $private:nic = (GetNic)
-    $private:addr = $private:nic.IPAddress | where { -Not $_.Contains(".") }
-    if ($private:addr -is [system.array])
+    if ($private:nic)
     {
-        $private:addr = $private:addr[0]
+        $private:addrs = @($private:nic.IPAddress | where { -Not $_.Contains(".") })
+        if ($private:addrs.Count -gt 0)
+        {
+            $private:addrs[0]
+        }
+        else
+        {
+            $Null
+        }
     }
-    $private:addr
+    else
+    {
+        $Null
+    }
 }
 Export-ModuleMember -Function GetNic
 Export-ModuleMember -Function GetIPv4Address

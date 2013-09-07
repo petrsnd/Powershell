@@ -1,4 +1,4 @@
-## Functions and snippets for interacting with Visual Studio 2012
+## Functions for interacting with Visual Studio 2012
 
 ## Private functions
 function InternalNoDuplicatePaths([string] $pathlist)
