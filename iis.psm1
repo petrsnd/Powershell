@@ -46,11 +46,39 @@ function CreateSelfSignedSSLCertificate([string] $name, [bool] $user, [string] $
     & $private:makecertbin -r -pe -n "CN=$name" -b 01/01/2000 -e 01/01/2036 -eku 1.3.6.1.5.5.7.3.1 -ss "${private:st}" `
                            -sr "${private:storeloc}" -sky exchange -sp "Microsoft RSA SChannel Cryptographic Provider" -sy 12
 }
+function GetCertificateByCn([string] $name, [bool] $user, [string] $store)
+{
+    $private:storeloc = "LocalMachine" 
+    if ($user)
+    {
+        $private:storeloc = "CurrentUser"
+    }
+    $private:st = "my"
+    if (-Not [string]::IsNullOrEmpty($store))
+    {
+        $private:st = $store
+    }
+    Get-ChildItem "cert:/${private:storeloc}/${private:st}" | where { $_.Subject -eq "CN=$name" }
+}
+function GetCertificateThumbprintByCn([string] $name, [bool] $user, [string] $store)
+{
+    $private:cert = (GetCertificateByCn $name $user $store)
+    if ($private:cert)
+    {
+        $private:cert.Thumbprint
+    }
+    else
+    {
+        $Null
+    }
+}
 Export-ModuleMember -Function GetMakeCertExe
 Export-ModuleMember -Function CreateSelfSignedSSLCertificate
+Export-ModuleMember -Function GetCertificateByCn
+Export-ModuleMember -Function GetCertificateThumbprintByCn
 
 
-## IIS Express
+## General Http
 function CreateUrlAclReservation([string] $urlbase, [string] $user)
 {
     $private:netshbin = (Which "netsh.exe")
@@ -82,3 +110,6 @@ function BindSSLCertificateToPort([string] $ipport, [string] $certfingerprint, [
 }
 Export-ModuleMember -Function CreateUrlAclReservation
 Export-ModuleMember -Function BindSSLCertificateToPort
+
+
+## IIS Express

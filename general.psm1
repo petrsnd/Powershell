@@ -1,6 +1,17 @@
 ## General purpose Powershell functions
 
-## Elevation
+## User Accounts and Elevation
+function GetQualifiedUsername()
+{
+    if (-Not [string]::IsNullOrEmpty("${env:userdomain}"))
+    {
+        "${env:userdomain}\${env:username}".ToLower()
+    }
+    else
+    {
+        ".\${env:username}".ToLower()
+    }
+}
 function RequireAdministrativePrivilege()
 {
     If (-Not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(`
@@ -67,6 +78,22 @@ Export-ModuleMember -Function FindFirstFileInDirectory
 
 
 ## Networking
+function GetHostname()
+{
+    "${env:computername}".ToLower()
+}
+function GetFQDN()
+{
+    $private:domain = "${env:userdnsname}".ToLower()
+    if (-Not [string]::IsNullOrEmpty($private:domain))
+    {
+        (GetHostname) + ".${private:domain}"
+    }
+    else
+    {
+        (GetHostname)
+    }
+}
 function GetNic()
 {
     ## Results may vary on multi-homed machines
@@ -162,6 +189,8 @@ function DeleteFirewallRule([string] $name)
         Write-Warning "Unable to find netsh.exe in PATH"
     }
 }
+Export-ModuleMember -Function GetHostname
+Export-ModuleMember -Function GetFQDN
 Export-ModuleMember -Function GetNic
 Export-ModuleMember -Function GetIPv4Address
 Export-ModuleMember -Function GetIPv6Address
