@@ -1,5 +1,9 @@
 ## Functions for interacting with IIS and IIS Express
 
+## Prerequisites
+Import-Module .\general.psm1 -Force
+
+
 ## SSL Certificates
 function GetMakeCertExe()
 {
@@ -8,10 +12,10 @@ function GetMakeCertExe()
     {
         $private:sdkspath = "C:\Program Files (x86)\Microsoft SDKs"
     }
-    $private:makecertbin = @(Get-ChildItem -Path $private:sdkspath -Filter makecert.exe -Recurse)
-    if ($private:makecertbin.Count -gt 0)
+    $private:makecertbin = (FindFirstFileInDirectory "makecert.exe" $private:sdkspath)
+    if ($private:makecertbin)
     {
-        $private:makecertbin[0].FullName
+        $private:makecertbin
     }
     else
     {
@@ -39,8 +43,42 @@ function CreateSelfSignedSSLCertificate([string] $name, [bool] $user, [string] $
         $private:st = $store
     }
     $private:makecertbin = (GetMakeCertExe)
-    & $private:makecertbin -r -pe -n "CN=$name" -b 01/01/2000 -e 01/01/2036 -eku 1.3.6.1.5.5.7.3.1 -ss $private:st `
-                           -sr $private:storeloc -sky exchange -sp "Microsoft RSA SChannel Cryptographic Provider" -sy 12
+    & $private:makecertbin -r -pe -n "CN=$name" -b 01/01/2000 -e 01/01/2036 -eku 1.3.6.1.5.5.7.3.1 -ss "${private:st}" `
+                           -sr "${private:storeloc}" -sky exchange -sp "Microsoft RSA SChannel Cryptographic Provider" -sy 12
 }
 Export-ModuleMember -Function GetMakeCertExe
 Export-ModuleMember -Function CreateSelfSignedSSLCertificate
+
+
+## IIS Express
+function CreateUrlAclReservation([string] $urlbase, [string] $user)
+{
+    $private:netshbin = (Which "netsh.exe")
+    if ($private:netshbin)
+    {
+        & $private:netshbin http add urlacl url="$urlbase" user="$user"
+    }
+    else
+    {
+        Write-Warning "Unable to find netsh.exe in PATH"
+    }
+}
+function BindSSLCertificateToPort([string] $ipport, [string] $certfingerprint, [string] $appguid)
+{
+    $private:netshbin = (Which "netsh.exe")
+    if ($private:netshbin)
+    {
+        $private:guid = [guid]::NewGuid().ToString()
+        if ($appguid)
+        {
+            $private:guid = $appguid
+        }
+        & $private:netshbin http add sslcert ipport="$ipport" appid="${private:guid}" certhash="$certfingerprint"
+    }
+    else
+    {
+        Write-Warning "Unable to find netsh.exe in PATH"
+    }
+}
+Export-ModuleMember -Function CreateUrlAclReservation
+Export-ModuleMember -Function BindSSLCertificateToPort

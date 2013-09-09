@@ -14,7 +14,7 @@ function RequireAdministrativePrivilege()
 Export-ModuleMember -Function RequireAdministrativePrivilege
 
 
-## Directories
+## Directories and Paths
 function GetScriptDirectory()
 {
     $private:cwd = (Get-Location).Path
@@ -30,8 +30,40 @@ function ChangeDirectory($dir)
     Set-Location $dir 
     [Environment]::CurrentDirectory = Get-Location -PSProvider FileSystem
 }
+function Which([string] $exe)
+{
+    Get-Command $exe | Select-Object -ExpandProperty Definition
+}
+function FindFileInDirectory([string] $file, [string] $directory)
+{
+    $private:files = @(Get-ChildItem -Path $directory -Filter $file -Recurse)
+    if ($private:files.Count -gt 0)
+    {
+        $private:files | % { $_.FullName }
+    }
+    else
+    {
+        Write-Warning "Unable to find $file in $directory"
+        @()
+    }
+}
+function FindFirstFileInDirectory([string] $file, [string] $directory)
+{
+    $private:filepaths = (FindFileInDirectory $file $directory)
+    if ($private:filepaths.Count -gt 0)
+    {
+        $private:filepaths[0]
+    }
+    else
+    {
+        $Null
+    }
+}
 Export-ModuleMember -Function GetScriptDirectory
 Export-ModuleMember -Function ChangeDirectory
+Export-ModuleMember -Function Which
+Export-ModuleMember -Function FindFileInDirectory
+Export-ModuleMember -Function FindFirstFileInDirectory
 
 
 ## Networking
@@ -88,6 +120,53 @@ function GetIPv6Address()
         $Null
     }
 }
+function RunFirewalAddRuleCommand([string] $op, [string] $name, [string] $direction, [string] $proto, [string] $port, [string] $action)
+{
+    $private:netshbin = (Which "netsh.exe")
+    if ($private:netshbin)
+    {
+        Write-Host $op.ToUpper() " Firewall Rule $name $direction $proto $port $action"
+        & $private:netshbin advfirewall firewall $op rule name="$name" dir="$direction" protocol="$proto" `
+                            localport="$port" action="$action"
+    }
+    else
+    {
+        Write-Warning "Unable to find netsh.exe in PATH"
+    }
+}
+function AddTcpInFirewallRule([string] $name, [string] $port, [string] $action)
+{
+    RunFirewalAddRuleCommand "add" $name "in" "tcp" $port $action
+}
+function AddTcpOutFirewallRule([string] $name, [string] $port, [string] $action)
+{
+    RunFirewalAddRuleCommand "add" $name "out" "tcp" $port $action
+}
+function AddUdpInFirewallRule([string] $name, [string] $port, [string] $action)
+{
+    RunFirewalAddRuleCommand "add" $name "in" "udp" $port $action
+}
+function AddUdpOutFirewallRule([string] $name, [string] $port, [string] $action)
+{
+    RunFirewalAddRuleCommand "add" $name "out" "udp" $port $action
+}
+function DeleteFirewallRule([string] $name)
+{
+    $private:netshbin = (Which "netsh.exe")
+    if ($private:netshbin)
+    {
+        & $private:netshbin advfirewall firewall delete rule name="$name"
+    }
+    else
+    {
+        Write-Warning "Unable to find netsh.exe in PATH"
+    }
+}
 Export-ModuleMember -Function GetNic
 Export-ModuleMember -Function GetIPv4Address
 Export-ModuleMember -Function GetIPv6Address
+Export-ModuleMember -Function AddTcpInFirewallRule
+Export-ModuleMember -Function AddTcpOutFirewallRule
+Export-ModuleMember -Function AddUdpInFirewallRule
+Export-ModuleMember -Function AddUdpOutFirewallRule
+Export-ModuleMember -Function DeleteFirewallRule
