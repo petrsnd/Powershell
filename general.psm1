@@ -60,7 +60,7 @@ function FindFileInDirectory([string] $file, [string] $directory)
 }
 function FindFirstFileInDirectory([string] $file, [string] $directory)
 {
-    $private:filepaths = (FindFileInDirectory $file $directory)
+    $private:filepaths = @(FindFileInDirectory $file $directory)
     if ($private:filepaths.Count -gt 0)
     {
         $private:filepaths[0]
@@ -75,6 +75,56 @@ Export-ModuleMember -Function ChangeDirectory
 Export-ModuleMember -Function Which
 Export-ModuleMember -Function FindFileInDirectory
 Export-ModuleMember -Function FindFirstFileInDirectory
+
+
+## Registry
+function GetHKLMSoftware32Bit()
+{
+    if ([Environment]::Is64BitProcess)
+    {
+        "HKLM:Software\Wow6432Node"
+    }
+    else
+    {
+        "HKLM:Software"
+    }
+}
+function GetHKCUSoftware32Bit()
+{
+    if ([Environment]::Is64BitProcess)
+    {
+        "HKCU:Software\Wow6432Node"
+    }
+    else
+    {
+        "HKCU:Software"
+    }
+}
+function ReadRegistryKeyValue([string] $keypath, [string] $valuename, [string] $default)
+{
+    $private:val = (Get-ItemProperty -Path "$keypath" -Name "$valuename" -ErrorAction SilentlyContinue)
+    if ($private:val)
+    {
+        $private:val | Select -ExpandProperty $valuename
+    }
+    else
+    {
+        # Default
+        if ($default)
+        {
+            Write-Host "Registry value '$valuename' not found, using default '$default"
+            $default
+        }
+        else
+        {
+            Write-Warning "Registry value '$valuename' not found, no default specified"
+            $Null
+        }
+    }
+}
+Export-ModuleMember -Function GetHKLMSoftware32Bit
+Export-ModuleMember -Function GetHKCUSoftware32Bit
+Export-ModuleMember -Function ReadRegistryKeyValue
 
 
 ## Networking

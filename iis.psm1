@@ -108,8 +108,27 @@ function BindSSLCertificateToPort([string] $ipport, [string] $certfingerprint, [
         Write-Warning "Unable to find netsh.exe in PATH"
     }
 }
+Export-ModuleMember -Function GetAppCmdExe
 Export-ModuleMember -Function CreateUrlAclReservation
 Export-ModuleMember -Function BindSSLCertificateToPort
 
 
 ## IIS Express
+function GetAppCmdExe()
+{
+    $private:keypath = (Join-Path (GetHKLMSoftware32Bit) "Microsoft\IISExpress\8.0")
+    $private:dir = ReadRegistryKeyValue $private:keypath "InstallPath" "C:\Program Files (x86)\IIS Express"
+    FindFirstFileInDirectory "appcmd.exe" $private:dir
+}
+function AddIISExpressBinding([string] $sitename, [string] $proto, [string] $bindinginfo)
+{
+    $private:appcmdbin = (GetAppCmdExe)
+    & $private:appcmdbin set site "/site.name:$sitename" "/+bindings.[protocol='$proto',bindingInformation='$bindinginfo']"
+}
+function RemoveIISExpressBinding([string] $sitename, [string] $proto, [string] $bindinginfo)
+{
+    $private:appcmdbin = (GetAppCmdExe)
+    & $private:appcmdbin set site "/site.name:$sitename" "/-bindings.[protocol='$proto',bindingInformation='$bindinginfo']"
+}
+Export-ModuleMember -Function AddIISExpressBinding
+Export-ModuleMember -Function RemoveIISExpressBinding
