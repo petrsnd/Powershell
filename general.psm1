@@ -22,6 +22,7 @@ function RequireAdministrativePrivilege()
         break
     }
 }
+Export-ModuleMember -Function GetQualifiedUsername
 Export-ModuleMember -Function RequireAdministrativePrivilege
 
 

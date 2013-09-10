@@ -1,7 +1,7 @@
 ## Functions for interacting with Visual Studio 2012
 
 ## Prerequisites
-Import-Module .\general.psm1 -Force
+Import-Module .\general.psm1 -Force -NoClobber -Scope Global
 
 
 ## Private functions

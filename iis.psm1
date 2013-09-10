@@ -1,7 +1,7 @@
 ## Functions for interacting with IIS and IIS Express
 
 ## Prerequisites
-Import-Module .\general.psm1 -Force
+Import-Module .\general.psm1 -Force -NoClobber -Scope Global
 
 
 ## SSL Certificates
@@ -79,21 +79,37 @@ Export-ModuleMember -Function GetCertificateThumbprintByCn
 
 
 ## General Http
-function CreateUrlAclReservation([string] $urlbase, [string] $user)
+Function FindNetShExe()
 {
     $private:netshbin = (Which "netsh.exe")
     if ($private:netshbin)
     {
-        & $private:netshbin http add urlacl url="$urlbase" user="$user"
+        $private:netshbin
     }
     else
     {
         Write-Warning "Unable to find netsh.exe in PATH"
     }
 }
+function CreateUrlAclReservation([string] $urlbase, [string] $user)
+{
+    $private:netshbin = (FindNetShExe)
+    if ($private:netshbin)
+    {
+        & $private:netshbin http add urlacl url="$urlbase" user="$user"
+    }
+}
+function DeleteUrlAclReservation([string] $urlbase)
+{
+    $private:netshbin = (FindNetShExe)
+    if ($private:netshbin)
+    {
+        & $private:netshbin http delete urlacl url="$urlbase"
+    }
+}
 function BindSSLCertificateToPort([string] $ipport, [string] $certfingerprint, [string] $appguid)
 {
-    $private:netshbin = (Which "netsh.exe")
+    $private:netshbin = (FindNetShExe)
     if ($private:netshbin)
     {
         $private:guid = [guid]::NewGuid().ToString()
@@ -103,13 +119,19 @@ function BindSSLCertificateToPort([string] $ipport, [string] $certfingerprint, [
         }
         & $private:netshbin http add sslcert ipport="$ipport" appid="${private:guid}" certhash="$certfingerprint"
     }
-    else
+}
+function UnbindSSLCertificateFromPort([string] $ipport)
+{
+    $private:netshbin = (FindNetShExe)
+    if ($private:netshbin)
     {
-        Write-Warning "Unable to find netsh.exe in PATH"
+        & $private:netshbin http delete sslcert ipport="$ipport"
     }
 }
 Export-ModuleMember -Function CreateUrlAclReservation
+Export-ModuleMember -Function DeleteUrlAclReservation
 Export-ModuleMember -Function BindSSLCertificateToPort
+Export-ModuleMember -Function UnbindSSLCertificateFromPort
 
 
 ## IIS Express
