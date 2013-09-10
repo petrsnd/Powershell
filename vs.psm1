@@ -14,7 +14,7 @@ function InternalModifyEnvironment([string] $batscript)
     ## Run script and store the output of set command in a temp file
     $private:tempfile = [IO.Path]::GetTempFileName()
     cmd.exe /c " `"$batscript`" && set > `"$private:tempfile`" "
-    Get-Content $private:tempfile | Foreach-Object {
+    Get-Content $private:tempfile | % {
         if ($_ -match "^(.*?)=(.*)$")
         {
             ## The VCVARS scripts aren't very smart about modifying path variables
