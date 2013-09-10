@@ -13,6 +13,10 @@ The code is written as modules that are meant to be imported.
 ```
 Import-Module .\mod.psm1 -Force
 ```
+Or, sometimes this works better because of nesting:
+```
+Import-Module .\general.psm1 -Force -NoClobber -Scope Global
+```
 
 It is usually a good idea to remove it at the end of your script.
 ```
@@ -25,7 +29,7 @@ License
 Copyright (c) 2013, Daniel F. Peterson. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted.
+modification, are permitted. No attribution is required.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
