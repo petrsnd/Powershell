@@ -91,6 +91,75 @@ Function FindNetShExe()
         Write-Warning "Unable to find netsh.exe in PATH"
     }
 }
+function GetUrlAclReservation([string] $urlbase)
+{
+    $private:netshbin = (FindNetShExe)
+    if ($private:netshbin)
+    {
+        $private:arr = @()
+        $private:obj = $Null
+        $private:usrarr = @()
+        $private:usrobj = $Null
+        (& netsh.exe http show urlacl url="$urlbase") -split "`n" | % {
+            $private:trimmed = $_.Trim()
+            if (-Not [string]::IsNullOrEmpty($private:trimmed))
+            {
+                $private:attrs = ($private:trimmed -split "\s*: ")
+                if ($private:attrs.Count -eq 2)
+                {
+                    if (-Not $private:obj)
+                    {
+                        $private:obj = New-Object -TypeName PSObject
+                    }
+                    if ($private:attrs -eq "Reserved URL")
+                    {
+                        Add-Member -InputObject $private:obj -MemberType NoteProperty `
+                                   -Name $private:attrs[0] -Value $private:attrs[1]
+                    }
+                    elseif ($private:attrs -eq "User")
+                    {
+                        if ($private:usrobj)
+                        {
+                            $private:usrarr += $private:usrobj
+                        }
+                        $private:usrobj = New-Object -TypeName PSObject
+                        Add-Member -InputObject $private:usrobj -MemberType NoteProperty `
+                                   -Name "Name" -Value $private:attrs[1]
+                    }
+                    else
+                    {
+                        Add-Member -InputObject $private:usrobj -MemberType NoteProperty `
+                                   -Name $private:attrs[0] -Value $private:attrs[1]
+                    }
+                }
+            }
+            else
+            {
+                if ($private:obj)
+                {
+                    if ($private:usrobj)
+                    {
+                        $private:usrarr += $private:usrobj
+                    }
+                    Add-Member -InputObject $private:obj -MemberType NoteProperty `
+                               -Name "Users" -Value $private:usrarr
+                    $private:usrarr = @()
+                    $private:usrobj = $Null
+                    $private:arr += $private:obj
+                    $private:obj = $Null
+                }
+            }
+        }
+        if ($private:arr.Count -gt 0)
+        {
+            $private:arr
+        }
+        else
+        {
+            $Null
+        }
+    }
+}
 function CreateUrlAclReservation([string] $urlbase, [string] $user)
 {
     $private:netshbin = (FindNetShExe)
@@ -105,6 +174,47 @@ function DeleteUrlAclReservation([string] $urlbase)
     if ($private:netshbin)
     {
         & $private:netshbin http delete urlacl url="$urlbase"
+    }
+}
+function GetSSLCertificateBinding([string] $ipport)
+{
+    $private:netshbin = (FindNetShExe)
+    if ($private:netshbin)
+    {
+        $private:arr = @()
+        $private:obj = $Null
+        (& $private:netshbin http show sslcert ipport="$ipport") -split "`n" | % {
+            $private:trimmed = $_.Trim()
+            if (-Not [string]::IsNullOrEmpty($private:trimmed))
+            {
+                $private:attrs = ($private:trimmed -split "\s+: ")
+                if ($private:attrs.Count -eq 2)
+                {
+                    if (-Not $private:obj)
+                    {
+                        $private:obj = New-Object -TypeName PSObject
+                    }
+                    Add-Member -InputObject $private:obj -MemberType NoteProperty `
+                               -Name ($private:attrs[0] -replace ":") -Value $private:attrs[1]
+                }
+            }
+            else
+            {
+                if ($private:obj)
+                {
+                    $private:arr += $private:obj
+                    $private:obj = $Null
+                }
+            }
+        }
+        if ($private:arr.Count -gt 0)
+        {
+            $private:arr
+        }
+        else
+        {
+            $Null
+        }
     }
 }
 function BindSSLCertificateToPort([string] $ipport, [string] $certfingerprint, [string] $appguid)
@@ -128,8 +238,10 @@ function UnbindSSLCertificateFromPort([string] $ipport)
         & $private:netshbin http delete sslcert ipport="$ipport"
     }
 }
+Export-ModuleMember -Function GetUrlAclReservation
 Export-ModuleMember -Function CreateUrlAclReservation
 Export-ModuleMember -Function DeleteUrlAclReservation
+Export-ModuleMember -Function GetSSLCertificateBinding
 Export-ModuleMember -Function BindSSLCertificateToPort
 Export-ModuleMember -Function UnbindSSLCertificateFromPort
 
