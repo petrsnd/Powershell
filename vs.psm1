@@ -43,17 +43,23 @@ function GetVSInstallPath()
 function SetupVSEnvironment([string] $arch)
 {
     $private:batpath = (GetVSInstallPath)
-    if ([string]::Compare($arch, "x64", $True) -or [string]::Compare($arch, "Win64", $True) -or [string]::Compare($arch, "amd64", $True))
+    if (([string]::Compare($arch, "x64", $True) -eq 0) `
+        -or ([string]::Compare($arch, "Win64", $True) -eq 0) `
+        -or ([string]::Compare($arch, "amd64", $True) -eq 0))
     {
+        Write-Host "Setting up Visual Studio environment for x64"
         $private:batpath = (Join-Path $private:batpath "VC\bin\amd64\vcvars64.bat")
     }
-    elseif ([string]::Compare($arch, "ARM", $True) -or [string]::Compare($arch, "x86_ARM", $True))
+    elseif (([string]::Compare($arch, "ARM", $True) -eq 0) `
+            -or ([string]::Compare($arch, "x86_ARM", $True)) -eq 0)
     {
         # Cross compile
+        Write-Host "Setting up Visual Studio environment for ARM"
         $private:batpath = (Join-Path $private:batpath "VC\bin\x86_arm\vcvarsx86_arm.bat")
     }
     else
     {
+        Write-Host "Setting up Visual Studio environment for x86"
         $private:batpath = (Join-Path $private:batpath "VC\bin\vcvars32.bat")
     }
     (InternalModifyEnvironment $private:batpath)

@@ -71,11 +71,25 @@ function FindFirstFileInDirectory([string] $file, [string] $directory)
         $Null
     }
 }
+function GetTempFileName([string] $ext)
+{
+    $private:tmppath = [System.IO.Path]::GetTempFileName()
+    Remove-Item -Path $private:tmppath -Force
+    if ([string]::IsNullOrEmpty($ext))
+    {
+        $private:tmppath
+    }
+    else
+    {
+        $private:tmppath + "." + $ext
+    }
+}
 Export-ModuleMember -Function GetScriptDirectory
 Export-ModuleMember -Function ChangeDirectory
 Export-ModuleMember -Function Which
 Export-ModuleMember -Function FindFileInDirectory
 Export-ModuleMember -Function FindFirstFileInDirectory
+Export-ModuleMember -Function GetTempFileName
 
 
 ## Registry
@@ -198,7 +212,7 @@ function GetIPv6Address()
         $Null
     }
 }
-function RunFirewalAddRuleCommand([string] $op, [string] $name, [string] $direction, [string] $proto, [string] $port, [string] $action)
+function RunFirewallAddRuleCommand([string] $op, [string] $name, [string] $direction, [string] $proto, [string] $port, [string] $action)
 {
     $private:netshbin = (Which "netsh.exe")
     if ($private:netshbin)
@@ -214,19 +228,19 @@ function RunFirewalAddRuleCommand([string] $op, [string] $name, [string] $direct
 }
 function AddTcpInFirewallRule([string] $name, [string] $port, [string] $action)
 {
-    RunFirewalAddRuleCommand "add" $name "in" "tcp" $port $action
+    RunFirewallAddRuleCommand "add" $name "in" "tcp" $port $action
 }
 function AddTcpOutFirewallRule([string] $name, [string] $port, [string] $action)
 {
-    RunFirewalAddRuleCommand "add" $name "out" "tcp" $port $action
+    RunFirewallAddRuleCommand "add" $name "out" "tcp" $port $action
 }
 function AddUdpInFirewallRule([string] $name, [string] $port, [string] $action)
 {
-    RunFirewalAddRuleCommand "add" $name "in" "udp" $port $action
+    RunFirewallAddRuleCommand "add" $name "in" "udp" $port $action
 }
 function AddUdpOutFirewallRule([string] $name, [string] $port, [string] $action)
 {
-    RunFirewalAddRuleCommand "add" $name "out" "udp" $port $action
+    RunFirewallAddRuleCommand "add" $name "out" "udp" $port $action
 }
 function DeleteFirewallRule([string] $name)
 {
@@ -250,3 +264,28 @@ Export-ModuleMember -Function AddTcpOutFirewallRule
 Export-ModuleMember -Function AddUdpInFirewallRule
 Export-ModuleMember -Function AddUdpOutFirewallRule
 Export-ModuleMember -Function DeleteFirewallRule
+
+
+## Internet
+function DownloadFile([string] $url, [string] $targetpath)
+{
+    $private:webclient = (New-Object System.Net.WebClient)
+    $private:webclient.DownloadFile($url, $targetpath)
+}
+Export-ModuleMember -Function DownloadFile
+
+
+## Archives
+function ZipFiles($zipfilepath, $sourcepath)
+{
+    [Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
+    $private:compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
+    [System.IO.Compression.ZipFile]::CreateFromDirectory($sourcepath, $zipfilepath, $private:compressionLevel, $false)
+}
+function UnzipFile($zipfilepath, $targetpath)
+{
+    [Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfilepath, $targetpath)
+}
+Export-ModuleMember -Function ZipFiles
+Export-ModuleMember -Function UnzipFile
