@@ -154,11 +154,12 @@ Export-ModuleMember -Function ReadRegistryKeyValue
 
 
 ## Windows Services
-function CreateService([string] $cmdline, [string] $name, [string] $displayname, [string] $description, [switch] $automatic, [switch] $start)
+function CreateService([string] $cmdline, [string] $name, [string] $displayname, [string] $description,
+                       [switch] $automatic, [switch] $start)
 {
     $private:block = {
         Param($cmdline, $name, $displayname, $description, $automatic, $start)
-        if ($automatic)
+        if ($automatic -eq $True)
         {
             New-Service -BinaryPathName "$cmdline" -Name "$name" -DisplayName "$displayname" -Description "$description" -StartupType Automatic
         }
@@ -166,14 +167,14 @@ function CreateService([string] $cmdline, [string] $name, [string] $displayname,
         {
             New-Service -BinaryPathName "$cmdline" -Name "$name" -DisplayName "$displayname" -Description "$description" -StartupType Manual
         }
-        if ($start)
+        if ($start -eq $True)
         {
             Start-Service -Name $name
         }
     }
     if (HasAdministrativePrivilege)
     {
-        Invoke-Command $private:block -ArgumentList $cmdline,$name,$displayname,$description,$automatic
+        Invoke-Command $private:block -ArgumentList $cmdline,$name,$displayname,$description,$automatic,$start
     }
     else
     {
@@ -202,7 +203,7 @@ function DeleteService([string] $name)
     }
     if (HasAdministrativePrivilege)
     {
-        Invoke-Command $private:block -ArgumentList "$name","Name='$name'"
+        Invoke-Command $private:block -ArgumentList $name,"Name='$name'"
     }
     else
     {
