@@ -12,10 +12,21 @@ function GetQualifiedUsername()
         ".\${env:username}".ToLower()
     }
 }
-function RequireAdministrativePrivilege()
+function HasAdministrativePrivilege()
 {
     If (-Not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(`
         [Security.Principal.WindowsBuiltInRole] "Administrator"))
+    {
+        $False
+    }
+    else
+    {
+        $True
+    }
+}
+function RequireAdministrativePrivilege()
+{
+    If (-Not (HasAdministrativePrivilege))
     {
         Write-Warning "You do not have Administrator rights to run this script.`nPlease re-run this script as an Administrator."
         Write-Host "Right-click on Powershell.exe to run as administrator."
@@ -140,6 +151,73 @@ function ReadRegistryKeyValue([string] $keypath, [string] $valuename, [string] $
 Export-ModuleMember -Function GetHKLMSoftware32Bit
 Export-ModuleMember -Function GetHKCUSoftware32Bit
 Export-ModuleMember -Function ReadRegistryKeyValue
+
+
+## Windows Services
+function CreateService([string] $cmdline, [string] $name, [string] $displayname, [string] $description, [switch] $automatic)
+{
+    $private:block = {
+        Param($cmdline, $name, $displayname, $description, $automatic)
+        if ($automatic)
+        {
+            New-Service -BinaryPathName "$cmdline" -Name "$name" -DisplayName "$displayname" -Description "$description" -StartupType Automatic
+        }
+        else
+        {
+            New-Service -BinaryPathName "$cmdline" -Name "$name" -DisplayName "$displayname" -Description "$description" -StartupType Manual
+        }
+    }
+    if (HasAdministrativePrivilege)
+    {
+        Invoke-Command $private:block -ArgumentList $cmdline,$name,$displayname,$description,$automatic
+    }
+    else
+    {
+        $private:scr = $private:block.ToString()
+        Start-Process $PSHOME\powershell.exe -Verb RunAs -ErrorAction SilentlyContinue `
+                      -ArgumentList "-Command `"Invoke-Command {$private:scr} -ArgumentList '$cmdline','$name','$displayname','$description',$automatic`""
+        Start-Sleep 2
+    }
+    $s = Get-Service $name -ErrorAction SilentlyContinue
+    if ($s -eq $Null)
+    {
+        $False
+    }
+    else
+    {
+        $True
+    }
+}
+function DeleteService([string] $name)
+{
+    $private:block = {
+        Param($filter)
+        $service = Get-WmiObject -Class Win32_Service -Filter $filter
+        $service.delete()
+    }
+    if (HasAdministrativePrivilege)
+    {
+        Invoke-Command $private:block -ArgumentList "Name='$name'"
+    }
+    else
+    {
+        $private:scr = $private:block.ToString()
+        Start-Process $PSHOME\powershell.exe -Verb RunAs -ErrorAction SilentlyContinue `
+                      -ArgumentList "-Command `"Invoke-Command {$private:scr} -ArgumentList 'Name=''$name'''`""
+        Start-Sleep 2
+    }
+    $s = Get-Service $name -ErrorAction SilentlyContinue
+    if ($s -eq $Null)
+    {
+        $True
+    }
+    else
+    {
+        $False
+    }
+}
+Export-ModuleMember -Function CreateService
+Export-ModuleMember -Function DeleteService
 
 
 ## Networking
