@@ -154,10 +154,10 @@ Export-ModuleMember -Function ReadRegistryKeyValue
 
 
 ## Windows Services
-function CreateService([string] $cmdline, [string] $name, [string] $displayname, [string] $description, [switch] $automatic)
+function CreateService([string] $cmdline, [string] $name, [string] $displayname, [string] $description, [switch] $automatic, [switch] $start)
 {
     $private:block = {
-        Param($cmdline, $name, $displayname, $description, $automatic)
+        Param($cmdline, $name, $displayname, $description, $automatic, $start)
         if ($automatic)
         {
             New-Service -BinaryPathName "$cmdline" -Name "$name" -DisplayName "$displayname" -Description "$description" -StartupType Automatic
@@ -165,6 +165,10 @@ function CreateService([string] $cmdline, [string] $name, [string] $displayname,
         else
         {
             New-Service -BinaryPathName "$cmdline" -Name "$name" -DisplayName "$displayname" -Description "$description" -StartupType Manual
+        }
+        if ($start)
+        {
+            Start-Service -Name $name
         }
     }
     if (HasAdministrativePrivilege)
@@ -175,7 +179,7 @@ function CreateService([string] $cmdline, [string] $name, [string] $displayname,
     {
         $private:scr = $private:block.ToString()
         Start-Process $PSHOME\powershell.exe -Verb RunAs -ErrorAction SilentlyContinue `
-                      -ArgumentList "-Command `"Invoke-Command {$private:scr} -ArgumentList '$cmdline','$name','$displayname','$description',$automatic`""
+                      -ArgumentList "-Command `"Invoke-Command {$private:scr} -ArgumentList '$cmdline','$name','$displayname','$description',$automatic,$start`""
         Start-Sleep 2
     }
     $s = Get-Service $name -ErrorAction SilentlyContinue
@@ -191,19 +195,20 @@ function CreateService([string] $cmdline, [string] $name, [string] $displayname,
 function DeleteService([string] $name)
 {
     $private:block = {
-        Param($filter)
+        Param($name, $filter)
+        Stop-Service $name
         $service = Get-WmiObject -Class Win32_Service -Filter $filter
         $service.delete()
     }
     if (HasAdministrativePrivilege)
     {
-        Invoke-Command $private:block -ArgumentList "Name='$name'"
+        Invoke-Command $private:block -ArgumentList "$name","Name='$name'"
     }
     else
     {
         $private:scr = $private:block.ToString()
         Start-Process $PSHOME\powershell.exe -Verb RunAs -ErrorAction SilentlyContinue `
-                      -ArgumentList "-Command `"Invoke-Command {$private:scr} -ArgumentList 'Name=''$name'''`""
+                      -ArgumentList "-Command `"Invoke-Command {$private:scr} -ArgumentList '$name','Name=''$name'''`""
         Start-Sleep 2
     }
     $s = Get-Service $name -ErrorAction SilentlyContinue
