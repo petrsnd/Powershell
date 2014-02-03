@@ -351,11 +351,30 @@ Export-ModuleMember -Function DeleteFirewallRule
 
 
 ## Internet
+function TurnOffSSLVerification()
+{
+    try 
+    {
+        Add-Type @"
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
+public class TrustAllCertsPolicy : ICertificatePolicy {
+    public bool CheckValidationResult(
+        ServicePoint srvPoint, X509Certificate certificate,
+        WebRequest request, int certificateProblem) {
+        return true;
+    }
+}
+"@ -EA SilentlyContinue
+    } catch {}
+    [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+}
 function DownloadFile([string] $url, [string] $targetpath)
 {
     $private:webclient = (New-Object System.Net.WebClient)
     $private:webclient.DownloadFile($url, $targetpath)
 }
+Export-ModuleMember -Function TurnOffSSLVerification
 Export-ModuleMember -Function DownloadFile
 
 
@@ -373,3 +392,35 @@ function UnzipFile($zipfilepath, $targetpath)
 }
 Export-ModuleMember -Function ZipFiles
 Export-ModuleMember -Function UnzipFile
+
+## Miscellaneous
+function GetRandomString($length)
+{
+    $private:set = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray()
+    for ($private:i = 1; $private:i -le $length; $private:i++)
+    {
+        $private:result += $private:set | Get-Random
+    }
+    $private:result
+}
+function HasMember($object, $property)
+{
+    $private:members = Get-Member -InputObject $object;
+    if ($private:members -ne $null -and $private:members.count -gt 0)
+    {
+        foreach ($private:member in $private:members)
+        {
+            if (($private:member.MemberType -eq "Property") -and ($private:member.Name -eq $property))
+            {
+                return $true
+            }
+        }
+        return $false
+    }
+    else
+    {
+        return $false;
+    }
+}
+Export-ModuleMember -Function GetRandomString
+Export-ModuleMember -Function HasMember
