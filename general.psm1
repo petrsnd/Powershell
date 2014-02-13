@@ -422,5 +422,12 @@ function HasMember($object, $property)
         return $false;
     }
 }
+function PressAnyKeyToContinue()
+{
+    Write-Host "Press any key to continue..."
+    ([Console]::Out.Flush())
+    $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
+}
 Export-ModuleMember -Function GetRandomString
 Export-ModuleMember -Function HasMember
+Export-ModuleMember -Function PressAnyKeyToContinue
