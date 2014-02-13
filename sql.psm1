@@ -43,6 +43,64 @@ Export-ModuleMember -Function GetSqlLocalDbExe
 
 
 ## (localdb)
+function DoesLocalDbInstanceExist([string] $name)
+{
+    $private:sqllocaldbbin = (GetSqlLocalDbExe)
+    $private:match = ((& ${private:sqllocaldbbin} info $name) | Select-String "doesn't exist")
+    if ($private:match)
+    {
+        $false
+    }
+    else
+    {
+        $true
+    }
+}
+function CreateLocalDbInstance([string] $name)
+{
+    $private:sqllocaldbbin = (GetSqlLocalDbExe)
+    & ${private:sqllocaldbbin} create $name
+}
+function DeleteLocalDbInstance([string] $name)
+{
+    $private:sqllocaldbbin = (GetSqlLocalDbExe)
+    & ${private:sqllocaldbbin} delete $name
+}
+function IsLocalDbInstanceRunning([string] $name)
+{
+    $private:sqllocaldbbin = (GetSqlLocalDbExe)
+    $private:match = ((& ${private:sqllocaldbbin} info $name) | Select-String "State:" | Select-String "Running")
+    if ($private:match)
+    {
+        $true
+    }
+    else
+    {
+        $false
+    }
+}
+function StartLocalDbInstance([string] $name)
+{
+    $private:sqllocaldbbin = (GetSqlLocalDbExe)
+    & ${private:sqllocaldbbin} start $name
+}
+function StopLocalDbInstance([string] $name)
+{
+    $private:sqllocaldbbin = (GetSqlLocalDbExe)
+    & ${private:sqllocaldbbin} stop $name
+}
+function KillLocalDbInstance([string] $name)
+{
+    $private:sqllocaldbbin = (GetSqlLocalDbExe)
+    & ${private:sqllocaldbbin} stop $name -i -k
+}
+Export-ModuleMember -Function DoesLocalDbInstanceExist
+Export-ModuleMember -Function CreateLocalDbInstance
+Export-ModuleMember -Function DeleteLocalDbInstance
+Export-ModuleMember -Function IsLocalDbInstanceRunning
+Export-ModuleMember -Function StartLocalDbInstance
+Export-ModuleMember -Function StopLocalDbInstance
+Export-ModuleMember -Function KillLocalDbInstance
 
 
 ## DACPAC
