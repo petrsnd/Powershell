@@ -358,7 +358,7 @@ function AddIISExpressSite([string] $sitename, [string]$physicalpath)
 {
     $private:appcmdbin = (GetAppCmdExe)
     $private:siteid = (GetNextSiteId)
-    & $private:appcmdbin add site "/id:${private:siteid}" "/name:'$sitename" "/physicalPath:'$physicalpath'"
+    & $private:appcmdbin add site "/id:${private:siteid}" "/name:$sitename" "/physicalPath:$physicalpath"
 }
 function RemoveIISExpressSite([string] $sitename)
 {
