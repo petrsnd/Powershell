@@ -37,8 +37,8 @@ function InternalModifyEnvironment([string] $batscript)
 ## Public functions
 function Get-VSInstallPath()
 {
-    $private:keypath = (Join-Path (general/Get-HKLMSoftware32Bit) "Microsoft\VisualStudio\12.0")
-    general/Read-RegistryKeyValue $private:keypath "ShellFolder" "C:\Program Files (x86)\Microsoft Visual Studio 12.0"
+    $private:keypath = (Join-Path (Get-HKLMSoftware32Bit) "Microsoft\VisualStudio\12.0")
+    Read-RegistryKeyValue $private:keypath "ShellFolder" "C:\Program Files (x86)\Microsoft Visual Studio 12.0"
 }
 function Setup-VSEnvironment([string] $arch)
 {

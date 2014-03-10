@@ -13,7 +13,7 @@ function Find-SqlPackageExe()
     {
         $private:sqlspath = "C:\Program Files (x86)\Microsoft SQL Server\110\DAC"
     }
-	$private:sqlpackagebin = (general\Find-FirstFileInDirectory "sqlpackage.exe" $private:sqlspath)
+	$private:sqlpackagebin = (Find-FirstFileInDirectory "sqlpackage.exe" $private:sqlspath)
     if ($private:sqlpackagebin)
     {
         $private:sqlpackagebin
@@ -27,7 +27,7 @@ function Find-SqlPackageExe()
 function Find-SqlLocalDbExe()
 {
     $private:sqlspath = "C:\Program Files\Microsoft SQL Server\110"
-    $private:sqllocaldbbin = (general\Find-FirstFileInDirectory "sqllocaldb.exe" $private:sqlspath)
+    $private:sqllocaldbbin = (Find-FirstFileInDirectory "sqllocaldb.exe" $private:sqlspath)
     if ($private:sqllocaldbbin)
     {
         $private:sqllocaldbbin

@@ -8,7 +8,7 @@ $ScriptDir = (GetScriptDirectory)
 Import-Module .\general.psm1 -Force -NoClobber -DisableNameChecking -Scope Global
 Import-Module .\vs.psm1 -Force -NoClobber -DisableNameChecking -Scope Global
 
-$PythonBin = (general/Which "python")
+$PythonBin = (Which "python")
 $GitUrl = "https://github.com/martine/ninja.git"
 $ZipUrl = "https://github.com/martine/ninja/archive/master.zip"
 $TargetPath = "${env:SystemDrive}\bin"
@@ -22,20 +22,20 @@ if ([string]::IsNullOrEmpty($PythonBin))
     Write-Warning "Unable to find python in your path.`nPlease install python or add it to your path."
     break
 }
-(general/Confirm-AdministrativePrivilege)
+(Confirm-AdministrativePrivilege)
 
 ## Download / Extract
-$TmpZip = (general/Get-TempFileName "zip")
+$TmpZip = (Get-TempFileName "zip")
 Write-Host "Downloading to $TmpZip..."
-(general/Download-File $ZipUrl $TmpZip)
+(Download-File $ZipUrl $TmpZip)
 
-$TmpDir = (general/Get-TempFileName)
+$TmpDir = (Get-TempFileName)
 Write-Host "Extracting to $TmpDir..."
-(general/Unzip-File $TmpZip $TmpDir)
+(Unzip-File $TmpZip $TmpDir)
 
 ## Build
-(vs/Setup-VSEnvironment "x86")
-(general/Change-Directory "$TmpDir\ninja-master")
+(Setup-VSEnvironment "x86")
+(Change-Directory "$TmpDir\ninja-master")
 & $PythonBin ".\bootstrap.py"
 
 if (Test-Path -Path ".\ninja.exe")
@@ -56,7 +56,7 @@ if (Test-Path -Path ".\ninja.bootstrap.exe")
 }
 
 ## Clean Up
-(general/Change-Directory $ScriptDir)
+(Change-Directory $ScriptDir)
 
 ## Result
 if ((Test-Path -Path (Join-Path $TargetPath "ninja.exe")) `

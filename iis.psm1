@@ -12,7 +12,7 @@ function Find-MakeCertExe()
     {
         $private:sdkspath = "C:\Program Files (x86)\Microsoft SDKs"
     }
-    $private:makecertbin = (general/Find-FirstFileInDirectory "makecert.exe" $private:sdkspath)
+    $private:makecertbin = (Find-FirstFileInDirectory "makecert.exe" $private:sdkspath)
     if ($private:makecertbin)
     {
         $private:makecertbin
@@ -250,14 +250,14 @@ Export-ModuleMember -Function Unbind-SSLCertificateFromPort
 function Find-AppCmdExe()
 {
     $private:keypath = (Join-Path (GetHKLMSoftware32Bit) "Microsoft\IISExpress\8.0")
-    $private:dir = general/Read-RegistryKeyValue $private:keypath "InstallPath" "C:\Program Files (x86)\IIS Express"
-    general/Find-FirstFileInDirectory "appcmd.exe" $private:dir
+    $private:dir = Read-RegistryKeyValue $private:keypath "InstallPath" "C:\Program Files (x86)\IIS Express"
+    Find-FirstFileInDirectory "appcmd.exe" $private:dir
 }
 function Get-IISExpressExe()
 {
     $private:keypath = (Join-Path (GetHKLMSoftware32Bit) "Microsoft\IISExpress\8.0")
-    $private:dir = general/Read-RegistryKeyValue $private:keypath "InstallPath" "C:\Program Files (x86)\IIS Express"
-    general/Find-FirstFileInDirectory "iisexpress.exe" $private:dir
+    $private:dir = Read-RegistryKeyValue $private:keypath "InstallPath" "C:\Program Files (x86)\IIS Express"
+    Find-FirstFileInDirectory "iisexpress.exe" $private:dir
 }
 function ParseSiteObject([string] $sitestr)
 {
