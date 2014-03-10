@@ -1,7 +1,7 @@
 ## General purpose Powershell functions
 
 ## User Accounts and Elevation
-function GetQualifiedUsername()
+function Get-QualifiedUsername()
 {
     if (-Not [string]::IsNullOrEmpty("${env:userdomain}"))
     {
@@ -24,7 +24,7 @@ function HasAdministrativePrivilege()
         $True
     }
 }
-function RequireAdministrativePrivilege()
+function Confirm-AdministrativePrivilege()
 {
     If (-Not (HasAdministrativePrivilege))
     {
@@ -33,12 +33,12 @@ function RequireAdministrativePrivilege()
         break
     }
 }
-Export-ModuleMember -Function GetQualifiedUsername
-Export-ModuleMember -Function RequireAdministrativePrivilege
+Export-ModuleMember -Function Get-QualifiedUsername
+Export-ModuleMember -Function Confirm-AdministrativePrivilege
 
 
 ## Directories and Paths
-function GetScriptDirectory()
+function Get-ScriptDirectory()
 {
     $private:cwd = (Get-Location).Path
     if ($MyInvocation -and $MyInvocation.MyCommand.Path)
@@ -47,7 +47,7 @@ function GetScriptDirectory()
     }
     $private:cwd
 }
-function ChangeDirectory($dir)
+function Change-Directory([string] $dir)
 {
     # By default directory changes don't change the current working directory in the environment
     Set-Location $dir 
@@ -57,7 +57,7 @@ function Which([string] $exe)
 {
     Get-Command $exe | Select-Object -ExpandProperty Definition
 }
-function FindFileInDirectory([string] $file, [string] $directory)
+function Find-FileInDirectory([string] $file, [string] $directory)
 {
     $private:files = @(Get-ChildItem -Path $directory -Filter $file -Recurse)
     if ($private:files.Count -gt 0)
@@ -70,9 +70,9 @@ function FindFileInDirectory([string] $file, [string] $directory)
         @()
     }
 }
-function FindFirstFileInDirectory([string] $file, [string] $directory)
+function Find-FirstFileInDirectory([string] $file, [string] $directory)
 {
-    $private:filepaths = @(FindFileInDirectory $file $directory)
+    $private:filepaths = @(Find-FileInDirectory $file $directory)
     if ($private:filepaths.Count -gt 0)
     {
         $private:filepaths[0]
@@ -82,7 +82,7 @@ function FindFirstFileInDirectory([string] $file, [string] $directory)
         $Null
     }
 }
-function GetTempFileName([string] $ext)
+function Get-TempFileName([string] $ext)
 {
     $private:tmppath = [System.IO.Path]::GetTempFileName()
     Remove-Item -Path $private:tmppath -Force
@@ -95,16 +95,16 @@ function GetTempFileName([string] $ext)
         $private:tmppath + "." + $ext
     }
 }
-Export-ModuleMember -Function GetScriptDirectory
-Export-ModuleMember -Function ChangeDirectory
+Export-ModuleMember -Function Get-ScriptDirectory
+Export-ModuleMember -Function Change-Directory
 Export-ModuleMember -Function Which
-Export-ModuleMember -Function FindFileInDirectory
-Export-ModuleMember -Function FindFirstFileInDirectory
-Export-ModuleMember -Function GetTempFileName
+Export-ModuleMember -Function Find-FileInDirectory
+Export-ModuleMember -Function Find-FirstFileInDirectory
+Export-ModuleMember -Function Get-TempFileName
 
 
 ## Registry
-function GetHKLMSoftware32Bit()
+function Get-HKLMSoftware32Bit()
 {
     if ([Environment]::Is64BitProcess)
     {
@@ -115,7 +115,7 @@ function GetHKLMSoftware32Bit()
         "HKLM:Software"
     }
 }
-function GetHKCUSoftware32Bit()
+function Get-HKCUSoftware32Bit()
 {
     if ([Environment]::Is64BitProcess)
     {
@@ -126,7 +126,7 @@ function GetHKCUSoftware32Bit()
         "HKCU:Software"
     }
 }
-function ReadRegistryKeyValue([string] $keypath, [string] $valuename, [string] $default)
+function Read-RegistryKeyValue([string] $keypath, [string] $valuename, [string] $default)
 {
     $private:val = (Get-ItemProperty -Path "$keypath" -Name "$valuename" -ErrorAction SilentlyContinue)
     if ($private:val)
@@ -148,14 +148,14 @@ function ReadRegistryKeyValue([string] $keypath, [string] $valuename, [string] $
         }
     }
 }
-Export-ModuleMember -Function GetHKLMSoftware32Bit
-Export-ModuleMember -Function GetHKCUSoftware32Bit
-Export-ModuleMember -Function ReadRegistryKeyValue
+Export-ModuleMember -Function Get-HKLMSoftware32Bit
+Export-ModuleMember -Function Get-HKCUSoftware32Bit
+Export-ModuleMember -Function Read-RegistryKeyValue
 
 
 ## Windows Services
-function CreateService([string] $cmdline, [string] $name, [string] $displayname, [string] $description,
-                       [switch] $automatic, [switch] $start)
+function Create-Service([string] $cmdline, [string] $name, [string] $displayname, [string] $description,
+                        [switch] $automatic, [switch] $start)
 {
     $private:block = {
         Param($cmdline, $name, $displayname, $description, $automatic, $start)
@@ -193,7 +193,7 @@ function CreateService([string] $cmdline, [string] $name, [string] $displayname,
         $True
     }
 }
-function DeleteService([string] $name)
+function Delete-Service([string] $name)
 {
     $private:block = {
         Param($name, $filter)
@@ -222,28 +222,28 @@ function DeleteService([string] $name)
         $False
     }
 }
-Export-ModuleMember -Function CreateService
-Export-ModuleMember -Function DeleteService
+Export-ModuleMember -Function Create-Service
+Export-ModuleMember -Function Delete-Service
 
 
 ## Networking
-function GetHostname()
+function Get-Hostname()
 {
     "${env:computername}".ToLower()
 }
-function GetFQDN()
+function Get-FQDN()
 {
     $private:domain = "${env:userdnsname}".ToLower()
     if (-Not [string]::IsNullOrEmpty($private:domain))
     {
-        (GetHostname) + ".${private:domain}"
+        (Get-Hostname) + ".${private:domain}"
     }
     else
     {
-        (GetHostname)
+        (Get-Hostname)
     }
 }
-function GetNic()
+function Get-NIC()
 {
     ## Results may vary on multi-homed machines
     $private:nics = @(Get-WmiObject Win32_NetworkAdapterConfiguration -Namespace "root\CIMV2" | where { $_.IPEnabled -eq "True" })
@@ -256,9 +256,9 @@ function GetNic()
         $Null
     }
 }
-function GetIPv4Address()
+function Get-IPv4Address()
 {
-    $private:nic = (GetNic)
+    $private:nic = (Get-NIC)
     if ($private:nic)
     {
         $private:addrs = @($private:nic.IPAddress | where { $_.Contains(".") })
@@ -276,9 +276,9 @@ function GetIPv4Address()
         $Null
     }
 }
-function GetIPv6Address()
+function Get-IPv6Address()
 {
-    $private:nic = (GetNic)
+    $private:nic = (Get-NIC)
     if ($private:nic)
     {
         $private:addrs = @($private:nic.IPAddress | where { -Not $_.Contains(".") })
@@ -310,23 +310,23 @@ function RunFirewallAddRuleCommand([string] $op, [string] $name, [string] $direc
         Write-Warning "Unable to find netsh.exe in PATH"
     }
 }
-function AddTcpInFirewallRule([string] $name, [string] $port, [string] $action)
+function Add-TcpInFirewallRule([string] $name, [string] $port, [string] $action)
 {
     RunFirewallAddRuleCommand "add" $name "in" "tcp" $port $action
 }
-function AddTcpOutFirewallRule([string] $name, [string] $port, [string] $action)
+function Add-TcpOutFirewallRule([string] $name, [string] $port, [string] $action)
 {
     RunFirewallAddRuleCommand "add" $name "out" "tcp" $port $action
 }
-function AddUdpInFirewallRule([string] $name, [string] $port, [string] $action)
+function Add-UdpInFirewallRule([string] $name, [string] $port, [string] $action)
 {
     RunFirewallAddRuleCommand "add" $name "in" "udp" $port $action
 }
-function AddUdpOutFirewallRule([string] $name, [string] $port, [string] $action)
+function Add-UdpOutFirewallRule([string] $name, [string] $port, [string] $action)
 {
     RunFirewallAddRuleCommand "add" $name "out" "udp" $port $action
 }
-function DeleteFirewallRule([string] $name)
+function Delete-FirewallRule([string] $name)
 {
     $private:netshbin = (Which "netsh.exe")
     if ($private:netshbin)
@@ -338,20 +338,20 @@ function DeleteFirewallRule([string] $name)
         Write-Warning "Unable to find netsh.exe in PATH"
     }
 }
-Export-ModuleMember -Function GetHostname
-Export-ModuleMember -Function GetFQDN
-Export-ModuleMember -Function GetNic
-Export-ModuleMember -Function GetIPv4Address
-Export-ModuleMember -Function GetIPv6Address
-Export-ModuleMember -Function AddTcpInFirewallRule
-Export-ModuleMember -Function AddTcpOutFirewallRule
-Export-ModuleMember -Function AddUdpInFirewallRule
-Export-ModuleMember -Function AddUdpOutFirewallRule
-Export-ModuleMember -Function DeleteFirewallRule
+Export-ModuleMember -Function Get-Hostname
+Export-ModuleMember -Function Get-FQDN
+Export-ModuleMember -Function Get-NIC
+Export-ModuleMember -Function Get-IPv4Address
+Export-ModuleMember -Function Get-IPv6Address
+Export-ModuleMember -Function Add-TcpInFirewallRule
+Export-ModuleMember -Function Add-TcpOutFirewallRule
+Export-ModuleMember -Function Add-UdpInFirewallRule
+Export-ModuleMember -Function Add-UdpOutFirewallRule
+Export-ModuleMember -Function Delete-FirewallRule
 
 
 ## Internet
-function TurnOffSSLVerification()
+function Disable-SSLVerification()
 {
     try 
     {
@@ -369,32 +369,32 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
     } catch {}
     [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
 }
-function DownloadFile([string] $url, [string] $targetpath)
+function Download-File([string] $url, [string] $targetpath)
 {
     $private:webclient = (New-Object System.Net.WebClient)
     $private:webclient.DownloadFile($url, $targetpath)
 }
-Export-ModuleMember -Function TurnOffSSLVerification
-Export-ModuleMember -Function DownloadFile
+Export-ModuleMember -Function Disable-SSLVerification
+Export-ModuleMember -Function Download-File
 
 
 ## Archives
-function ZipFiles($zipfilepath, $sourcepath)
+function Zip-Files([string] $zipfilepath, [string] $sourcepath)
 {
     [Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
     $private:compressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
     [System.IO.Compression.ZipFile]::CreateFromDirectory($sourcepath, $zipfilepath, $private:compressionLevel, $false)
 }
-function UnzipFile($zipfilepath, $targetpath)
+function Unzip-File([string] $zipfilepath, [string] $targetpath)
 {
     [Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
     [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfilepath, $targetpath)
 }
-Export-ModuleMember -Function ZipFiles
-Export-ModuleMember -Function UnzipFile
+Export-ModuleMember -Function Zip-Files
+Export-ModuleMember -Function Unzip-File
 
 ## Miscellaneous
-function GetRandomString($length)
+function Get-RandomString([int] $length)
 {
     $private:set = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray()
     for ($private:i = 1; $private:i -le $length; $private:i++)
@@ -403,7 +403,7 @@ function GetRandomString($length)
     }
     $private:result
 }
-function HasMember($object, $property)
+function Confirm-Member($object, [string] $property)
 {
     $private:members = Get-Member -InputObject $object;
     if ($private:members -ne $null -and $private:members.count -gt 0)
@@ -422,12 +422,12 @@ function HasMember($object, $property)
         return $false;
     }
 }
-function PressAnyKeyToContinue()
+function Press-AnyKeyToContinue()
 {
     Write-Host "Press any key to continue..."
     ([Console]::Out.Flush())
     $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null
 }
-Export-ModuleMember -Function GetRandomString
-Export-ModuleMember -Function HasMember
-Export-ModuleMember -Function PressAnyKeyToContinue
+Export-ModuleMember -Function Get-RandomString
+Export-ModuleMember -Function Has-Member
+Export-ModuleMember -Function Press-AnyKeyToContinue

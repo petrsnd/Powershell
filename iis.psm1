@@ -5,14 +5,14 @@ Import-Module .\general.psm1 -Force -NoClobber -Scope Global
 
 
 ## SSL Certificates
-function GetMakeCertExe()
+function Find-MakeCertExe()
 {
     $private:sdkspath = "C:\Program Files\Microsoft SDKs"
     if ([Environment]::Is64BitProcess)
     {
         $private:sdkspath = "C:\Program Files (x86)\Microsoft SDKs"
     }
-    $private:makecertbin = (FindFirstFileInDirectory "makecert.exe" $private:sdkspath)
+    $private:makecertbin = (general/Find-FirstFileInDirectory "makecert.exe" $private:sdkspath)
     if ($private:makecertbin)
     {
         $private:makecertbin
@@ -23,7 +23,7 @@ function GetMakeCertExe()
         "makecert.exe"
     }
 }
-function CreateSelfSignedSSLCertificate([string] $name, [bool] $user, [string] $store)
+function Create-SelfSignedSSLCertificate([string] $name, [bool] $user, [string] $store)
 {
     if ([string]::IsNullOrEmpty($name))
     {
@@ -42,11 +42,11 @@ function CreateSelfSignedSSLCertificate([string] $name, [bool] $user, [string] $
     {
         $private:st = $store
     }
-    $private:makecertbin = (GetMakeCertExe)
+    $private:makecertbin = (Find-MakeCertExe)
     & $private:makecertbin -r -pe -n "CN=$name" -b 01/01/2000 -e 01/01/2036 -eku 1.3.6.1.5.5.7.3.1 -ss "${private:st}" `
                            -sr "${private:storeloc}" -sky exchange -sp "Microsoft RSA SChannel Cryptographic Provider" -sy 12
 }
-function GetCertificateByCn([string] $name, [bool] $user, [string] $store)
+function Get-CertificateByCn([string] $name, [bool] $user, [string] $store)
 {
     $private:storeloc = "LocalMachine" 
     if ($user)
@@ -60,9 +60,9 @@ function GetCertificateByCn([string] $name, [bool] $user, [string] $store)
     }
     Get-ChildItem "cert:/${private:storeloc}/${private:st}" | where { $_.Subject -eq "CN=$name" }
 }
-function GetCertificateThumbprintByCn([string] $name, [bool] $user, [string] $store)
+function Get-CertificateThumbprintByCn([string] $name, [bool] $user, [string] $store)
 {
-    $private:cert = (GetCertificateByCn $name $user $store)
+    $private:cert = (Get-CertificateByCn $name $user $store)
     if ($private:cert)
     {
         $private:cert.Thumbprint
@@ -72,14 +72,14 @@ function GetCertificateThumbprintByCn([string] $name, [bool] $user, [string] $st
         $Null
     }
 }
-Export-ModuleMember -Function GetMakeCertExe
-Export-ModuleMember -Function CreateSelfSignedSSLCertificate
-Export-ModuleMember -Function GetCertificateByCn
-Export-ModuleMember -Function GetCertificateThumbprintByCn
+Export-ModuleMember -Function Find-MakeCertExe
+Export-ModuleMember -Function Create-SelfSignedSSLCertificate
+Export-ModuleMember -Function Get-CertificateByCn
+Export-ModuleMember -Function Get-CertificateThumbprintByCn
 
 
 ## General Http
-Function FindNetShExe()
+Function Find-NetShExe()
 {
     $private:netshbin = (Which "netsh.exe")
     if ($private:netshbin)
@@ -91,9 +91,9 @@ Function FindNetShExe()
         Write-Warning "Unable to find netsh.exe in PATH"
     }
 }
-function GetUrlAclReservation([string] $urlbase)
+function Get-UrlAclReservation([string] $urlbase)
 {
-    $private:netshbin = (FindNetShExe)
+    $private:netshbin = (Find-NetShExe)
     if ($private:netshbin)
     {
         $private:arr = @()
@@ -160,25 +160,25 @@ function GetUrlAclReservation([string] $urlbase)
         }
     }
 }
-function CreateUrlAclReservation([string] $urlbase, [string] $user)
+function Create-UrlAclReservation([string] $urlbase, [string] $user)
 {
-    $private:netshbin = (FindNetShExe)
+    $private:netshbin = (Find-NetShExe)
     if ($private:netshbin)
     {
         & $private:netshbin http add urlacl url="$urlbase" user="$user"
     }
 }
-function DeleteUrlAclReservation([string] $urlbase)
+function Delete-UrlAclReservation([string] $urlbase)
 {
-    $private:netshbin = (FindNetShExe)
+    $private:netshbin = (Find-NetShExe)
     if ($private:netshbin)
     {
         & $private:netshbin http delete urlacl url="$urlbase"
     }
 }
-function GetSSLCertificateBinding([string] $ipport)
+function Get-SSLCertificateBinding([string] $ipport)
 {
-    $private:netshbin = (FindNetShExe)
+    $private:netshbin = (Find-NetShExe)
     if ($private:netshbin)
     {
         $private:arr = @()
@@ -217,9 +217,9 @@ function GetSSLCertificateBinding([string] $ipport)
         }
     }
 }
-function BindSSLCertificateToPort([string] $ipport, [string] $certfingerprint, [string] $appguid)
+function Bind-SSLCertificateToPort([string] $ipport, [string] $certfingerprint, [string] $appguid)
 {
-    $private:netshbin = (FindNetShExe)
+    $private:netshbin = (Find-NetShExe)
     if ($private:netshbin)
     {
         $private:guid = [guid]::NewGuid().ToString()
@@ -230,34 +230,34 @@ function BindSSLCertificateToPort([string] $ipport, [string] $certfingerprint, [
         & $private:netshbin http add sslcert ipport="$ipport" appid="${private:guid}" certhash="$certfingerprint"
     }
 }
-function UnbindSSLCertificateFromPort([string] $ipport)
+function Unbind-SSLCertificateFromPort([string] $ipport)
 {
-    $private:netshbin = (FindNetShExe)
+    $private:netshbin = (Find-NetShExe)
     if ($private:netshbin)
     {
         & $private:netshbin http delete sslcert ipport="$ipport"
     }
 }
-Export-ModuleMember -Function GetUrlAclReservation
-Export-ModuleMember -Function CreateUrlAclReservation
-Export-ModuleMember -Function DeleteUrlAclReservation
-Export-ModuleMember -Function GetSSLCertificateBinding
-Export-ModuleMember -Function BindSSLCertificateToPort
-Export-ModuleMember -Function UnbindSSLCertificateFromPort
+Export-ModuleMember -Function Get-UrlAclReservation
+Export-ModuleMember -Function Create-UrlAclReservation
+Export-ModuleMember -Function Delete-UrlAclReservation
+Export-ModuleMember -Function Get-SSLCertificateBinding
+Export-ModuleMember -Function Bind-SSLCertificateToPort
+Export-ModuleMember -Function Unbind-SSLCertificateFromPort
 
 
 ## IIS Express
-function GetAppCmdExe()
+function Find-AppCmdExe()
 {
     $private:keypath = (Join-Path (GetHKLMSoftware32Bit) "Microsoft\IISExpress\8.0")
-    $private:dir = ReadRegistryKeyValue $private:keypath "InstallPath" "C:\Program Files (x86)\IIS Express"
-    FindFirstFileInDirectory "appcmd.exe" $private:dir
+    $private:dir = general/Read-RegistryKeyValue $private:keypath "InstallPath" "C:\Program Files (x86)\IIS Express"
+    general/Find-FirstFileInDirectory "appcmd.exe" $private:dir
 }
-function GetIISExpressExe()
+function Get-IISExpressExe()
 {
     $private:keypath = (Join-Path (GetHKLMSoftware32Bit) "Microsoft\IISExpress\8.0")
-    $private:dir = ReadRegistryKeyValue $private:keypath "InstallPath" "C:\Program Files (x86)\IIS Express"
-    FindFirstFileInDirectory "iisexpress.exe" $private:dir
+    $private:dir = general/Read-RegistryKeyValue $private:keypath "InstallPath" "C:\Program Files (x86)\IIS Express"
+    general/Find-FirstFileInDirectory "iisexpress.exe" $private:dir
 }
 function ParseSiteObject([string] $sitestr)
 {
@@ -288,7 +288,7 @@ function ParseSiteObject([string] $sitestr)
 }
 function GetNextSiteId()
 {
-    $private:appcmdbin = (GetAppCmdExe)
+    $private:appcmdbin = (Find-AppCmdExe)
     $private:sites = (& $private:appcmdbin list sites)
     if ($private:sites)
     {
@@ -302,7 +302,7 @@ function GetNextSiteId()
 }
 function GetSiteIdForName([string] $sitename)
 {
-    $private:appcmdbin = (GetAppCmdExe)
+    $private:appcmdbin = (Find-AppCmdExe)
     $private:sitestr = (& $private:appcmdbin list site "/name:$sitename")
     $private:siteobj = (ParseSiteObject $private:sitestr)
     if ($private:siteobj)
@@ -316,7 +316,7 @@ function GetSiteIdForName([string] $sitename)
 }
 function GetNextSiteId()
 {
-    $private:appcmdbin = (GetAppCmdExe)
+    $private:appcmdbin = (Find-AppCmdExe)
     $private:sites = (& $private:appcmdbin list sites)
     if ($private:sites)
     {
@@ -330,7 +330,7 @@ function GetNextSiteId()
 }
 function GetSiteIdForName([string] $sitename)
 {
-    $private:appcmdbin = (GetAppCmdExe)
+    $private:appcmdbin = (Find-AppCmdExe)
     $private:sitestr = (& $private:appcmdbin list site "/name:$sitename")
     if ($private:sitestr)
     {
@@ -341,9 +341,9 @@ function GetSiteIdForName([string] $sitename)
         $Null
     }
 }
-function GetIISExpressSite([string] $sitename)
+function Get-IISExpressSite([string] $sitename)
 {
-    $private:appcmdbin = (GetAppCmdExe)
+    $private:appcmdbin = (Find-AppCmdExe)
     if ($sitename)
     {
         $private:sitestr = (& $private:appcmdbin list site "/name:$sitename")
@@ -354,15 +354,15 @@ function GetIISExpressSite([string] $sitename)
         (& $private:appcmdbin list sites) | % { (ParseSiteObject $_) }
     }
 }
-function AddIISExpressSite([string] $sitename, [string]$physicalpath)
+function Add-IISExpressSite([string] $sitename, [string]$physicalpath)
 {
-    $private:appcmdbin = (GetAppCmdExe)
+    $private:appcmdbin = (Find-AppCmdExe)
     $private:siteid = (GetNextSiteId)
     & $private:appcmdbin add site "/id:${private:siteid}" "/name:$sitename" "/physicalPath:$physicalpath"
 }
-function RemoveIISExpressSite([string] $sitename)
+function Remove-IISExpressSite([string] $sitename)
 {
-    $private:appcmdbin = (GetAppCmdExe)
+    $private:appcmdbin = (Find-AppCmdExe)
     $private:siteid = (GetSiteIdForName $sitename)
     if ($private:siteid)
     {
@@ -373,26 +373,26 @@ function RemoveIISExpressSite([string] $sitename)
         Write-Warning "Unable to find site '$sitename'"
     }
 }
-function AddIISExpressBinding([string] $sitename, [string] $proto, [string] $bindinginfo)
+function Add-IISExpressBinding([string] $sitename, [string] $proto, [string] $bindinginfo)
 {
-    $private:appcmdbin = (GetAppCmdExe)
+    $private:appcmdbin = (Find-AppCmdExe)
     & $private:appcmdbin set site "/site.name:$sitename" "/+bindings.[protocol='$proto',bindingInformation='$bindinginfo']"
 }
-function RemoveIISExpressBinding([string] $sitename, [string] $proto, [string] $bindinginfo)
+function Remove-IISExpressBinding([string] $sitename, [string] $proto, [string] $bindinginfo)
 {
-    $private:appcmdbin = (GetAppCmdExe)
+    $private:appcmdbin = (Find-AppCmdExe)
     & $private:appcmdbin set site "/site.name:$sitename" "/-bindings.[protocol='$proto',bindingInformation='$bindinginfo']"
 }
-function RunIISExpressSite([string] $sitename)
+function Run-IISExpressSite([string] $sitename)
 {
-    $private:iisexpressbin = (GetIISExpressExe)
+    $private:iisexpressbin = (Get-IISExpressExe)
     & $private:iisexpressbin "/site:$sitename"
 }
-Export-ModuleMember -Function GetAppCmdExe
-Export-ModuleMember -Function GetIISExpressExe
-Export-ModuleMember -Function GetIISExpressSite
-Export-ModuleMember -Function AddIISExpressSite
-Export-ModuleMember -Function RemoveIISExpressSite
-Export-ModuleMember -Function AddIISExpressBinding
-Export-ModuleMember -Function RemoveIISExpressBinding
-Export-ModuleMember -Function RunIISExpressSite
+Export-ModuleMember -Function Find-AppCmdExe
+Export-ModuleMember -Function Get-IISExpressExe
+Export-ModuleMember -Function Get-IISExpressSite
+Export-ModuleMember -Function Add-IISExpressSite
+Export-ModuleMember -Function Remove-IISExpressSite
+Export-ModuleMember -Function Add-IISExpressBinding
+Export-ModuleMember -Function Remove-IISExpressBinding
+Export-ModuleMember -Function Run-IISExpressSite

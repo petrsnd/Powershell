@@ -35,14 +35,14 @@ function InternalModifyEnvironment([string] $batscript)
 }
 
 ## Public functions
-function GetVSInstallPath()
+function Get-VSInstallPath()
 {
-    $private:keypath = (Join-Path (GetHKLMSoftware32Bit) "Microsoft\VisualStudio\12.0")
-    ReadRegistryKeyValue $private:keypath "ShellFolder" "C:\Program Files (x86)\Microsoft Visual Studio 12.0"
+    $private:keypath = (Join-Path (general/Get-HKLMSoftware32Bit) "Microsoft\VisualStudio\12.0")
+    general/Read-RegistryKeyValue $private:keypath "ShellFolder" "C:\Program Files (x86)\Microsoft Visual Studio 12.0"
 }
-function SetupVSEnvironment([string] $arch)
+function Setup-VSEnvironment([string] $arch)
 {
-    $private:batpath = (GetVSInstallPath)
+    $private:batpath = (Get-VSInstallPath)
     if (([string]::Compare($arch, "x64", $True) -eq 0) `
         -or ([string]::Compare($arch, "Win64", $True) -eq 0) `
         -or ([string]::Compare($arch, "amd64", $True) -eq 0))
@@ -64,9 +64,9 @@ function SetupVSEnvironment([string] $arch)
     }
     (InternalModifyEnvironment $private:batpath)
 }
-function BuildVSSolution([string] $slnpath, [string] $arch, [string] $config, [string] $buildargs)
+function Build-VSSolution([string] $slnpath, [string] $arch, [string] $config, [string] $buildargs)
 {
-    (SetupVSEnvironment $arch)
+    (Setup-VSEnvironment $arch)
     $private:configparam = "/p:Configuration='" + $config + "'"
     $private:archparam = ""
     if (-Not [string]::IsNullOrEmpty($arch))
@@ -75,9 +75,9 @@ function BuildVSSolution([string] $slnpath, [string] $arch, [string] $config, [s
     }
     Invoke-Expression "msbuild.exe $slnpath ${private:configparam} ${private:archparam} $buildargs"
 }
-function CleanVSSolution([string] $slnpath, [string] $arch, [string] $config)
+function Clean-VSSolution([string] $slnpath, [string] $arch, [string] $config)
 {
-    (SetupVSEnvironment $arch)
+    (Setup-VSEnvironment $arch)
     $private:configparam = "/p:Configuration='" + $config + "'"
     $private:archparam = ""
     if (-Not [string]::IsNullOrEmpty($arch))
@@ -86,7 +86,7 @@ function CleanVSSolution([string] $slnpath, [string] $arch, [string] $config)
     }
     Invoke-Expression "msbuild.exe $slnpath /t:Clean ${private:configparam} ${private:archparam}"
 }
-Export-ModuleMember -Function GetVSInstallPath
-Export-ModuleMember -Function SetupVSEnvironment
-Export-ModuleMember -Function BuildVSSolution
-Export-ModuleMember -Function CleanVSSolution
+Export-ModuleMember -Function Get-VSInstallPath
+Export-ModuleMember -Function Setup-VSEnvironment
+Export-ModuleMember -Function Build-VSSolution
+Export-ModuleMember -Function Clean-VSSolution
