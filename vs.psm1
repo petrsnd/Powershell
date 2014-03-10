@@ -1,7 +1,7 @@
 ## Functions for interacting with Visual Studio 2013
 
 ## Prerequisites
-Import-Module .\general.psm1 -Force -NoClobber -Scope Global
+Import-Module .\general.psm1 -Force -NoClobber -DisableNameChecking -Scope Global
 
 
 ## Private functions

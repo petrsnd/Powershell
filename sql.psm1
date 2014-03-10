@@ -2,7 +2,7 @@
 
 
 ## Prerequisites
-Import-Module .\general.psm1 -Force -NoClobber -Scope Global
+Import-Module .\general.psm1 -Force -NoClobber -DisableNameChecking -Scope Global
 
 
 ## Command line tools

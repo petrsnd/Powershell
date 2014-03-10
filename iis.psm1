@@ -1,7 +1,7 @@
 ## Functions for interacting with IIS and IIS Express
 
 ## Prerequisites
-Import-Module .\general.psm1 -Force -NoClobber -Scope Global
+Import-Module .\general.psm1 -Force -NoClobber -DisableNameChecking -Scope Global
 
 
 ## SSL Certificates
