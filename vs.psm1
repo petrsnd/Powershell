@@ -1,7 +1,7 @@
 ## Functions for interacting with Visual Studio 2013
 
 ## Prerequisites
-Import-Module .\general.psm1 -Force -NoClobber -DisableNameChecking -Scope Global
+Import-Module $PSScriptRoot\general.psm1 -Force -NoClobber -DisableNameChecking -Scope Global
 
 
 ## Private functions
@@ -73,7 +73,7 @@ function Build-VSSolution([string] $slnpath, [string] $arch, [string] $config, [
     {
         $private:archparam = "/p:Platform='" + $arch + "'"
     }
-    Invoke-Expression "msbuild.exe $slnpath ${private:configparam} ${private:archparam} $buildargs"
+    Invoke-Expression "msbuild.exe '$slnpath' ${private:configparam} ${private:archparam} $buildargs"
 }
 function Clean-VSSolution([string] $slnpath, [string] $arch, [string] $config)
 {
@@ -84,7 +84,7 @@ function Clean-VSSolution([string] $slnpath, [string] $arch, [string] $config)
     {
         $private:archparam = "/p:Platform='" + $arch + "'"
     }
-    Invoke-Expression "msbuild.exe $slnpath /t:Clean ${private:configparam} ${private:archparam}"
+    Invoke-Expression "msbuild.exe '$slnpath' /t:Clean ${private:configparam} ${private:archparam}"
 }
 Export-ModuleMember -Function Get-VSInstallPath
 Export-ModuleMember -Function Setup-VSEnvironment
